@@ -2,95 +2,95 @@ project page: http://fun.sci.fukuoka-u.ac.jp/wiki/index.php?xyzzy
 
 *scheme-mode by [[matsuoka]] [#b46ffbbf]
 
-scheme-mode for xyzzy �� Scheme ���������߂̃��W���[���[�h�B
-�ł��邱�Ƃ͎��̂Ƃ���B
+scheme-mode for xyzzy は Scheme を書くためのメジャーモード。
+できることは次のとおり。
 
-+ �������\�[�X�R�[�h�ɂ���Ȃ�ɐF���t��(xyzzy �� syntax �t�@�C����)
-+ �������\�[�X�R�[�h�̐F���t����͑S���ł��Ȃ��Ă��⊮�ł���(���Ȃ���)
-+ �������\�[�X�R�[�h������Ȃ�Ɏ����C���f���g�����(�܂����������΂�������)
-+ �������\�[�X�R�[�h�������̎g���Ă���C���^�v���^�Ɏ��s������(���܂��s����)
-+ ��̋@�\���g���� xyzzy �� *scratch* �o�b�t�@�� Scheme �ł݂����Ȃ̂�����
++ 書いたソースコードにそれなりに色が付く(xyzzy の syntax ファイルで)
++ 書いたソースコードの色が付くやつは全部打たなくても補完できる(少ないが)
++ 書いたソースコードがそれなりに自動インデントされる(まだ実装したばっかだが)
++ 書いたソースコードを自分の使っているインタプリタに実行させる(うまく行けば)
++ 上の機能を使って xyzzy の *scratch* バッファの Scheme 版みたいなのが作れる
 
-���̂悤�Ȑl����?
+次のような人向け?
 
-- Windows �� Scheme �׋��������񂾂��ǃR�}���h���C���͂�����Ɓc
-- xyzzy �� Scheme �������Čv�Z�����Ă݂悤!(���킵��)
-- xyzzy �œ������Əd���������O�� Scheme �ɓ����悤(���킵��)
+- Windows で Scheme 勉強したいんだけどコマンドラインはちょっと…
+- xyzzy で Scheme 動かして計算させてみよう!(←わしだ)
+- xyzzy で動かすと重い処理を外の Scheme に投げよう(←わしだ)
 
-�܂�A�����̂��߂̃I���I�����[�h�c�́A�͂�������!(PPG ��) �̂ł����B
+つまり、自分のためのオレオレモード…の、はずだった!(PPG 風) のでした。
 
-**�C���X�g�[�� [#s27c935e]
+**インストール [#s27c935e]
 
-- scheme-mode.zip ���𓀂��āAsite-lisp/scheme-mode.l �� etc/Scheme �����o��
-- site-lisp/scheme-mode.l �� xyzzy �� site-lisp �̉��ɒu��
-- etc/Scheme �� xyzzy �� etc �̉��ɒu��
-- scheme-mode.l ���o�C�g�R���p�C�����Ă���
--- M-x byte-compile-file ���邩�A�t�@�C���[�� scheme-mode.l ��I������ B(���啶��)������
-- .xyzzy �ɌĂяo�������C���^�v���^�����̐ݒ������
--- �T���v���������Ă����̂ł������Ă��ꂢ
---- 20090118 �łŐݒ���ȑf�������[
---- �f�t�H���g�̃t�b�N�𐮔����������Ȃ̂Ő̏����Ă������ݒ���L��
+- scheme-mode.zip を解凍して、site-lisp/scheme-mode.l と etc/Scheme を取り出す
+- site-lisp/scheme-mode.l を xyzzy の site-lisp の下に置く
+- etc/Scheme を xyzzy の etc の下に置く
+- scheme-mode.l をバイトコンパイルしておく
+-- M-x byte-compile-file するか、ファイラーで scheme-mode.l を選択して B(←大文字)を押す
+- .xyzzy に呼び出したいインタプリタ向けの設定を書く
+-- サンプルを書いておくのでいじってくれい
+--- 20090118 版で設定を簡素化したー
+--- デフォルトのフックを整備しただけなので昔書いてあった設定も有効
 
  ;======================================================================
  ; scheme-mode(20090118)
  ;----------------------------------------------------------------------
  (load-library "scheme-mode")
- (push '("\\.scm$" . scheme-mode) *auto-mode-alist*)
- ; �C���^�v���^�̋N���R�}���h�� *scheme-run-command* �ɐݒ� 
- ; Chez Petite Scheme ����
+ (push '("¥¥.scm$" . scheme-mode) *auto-mode-alist*)
+ ; インタプリタの起動コマンドを *scheme-run-command* に設定 
+ ; Chez Petite Scheme 向け
  (setf *scheme-run-command*
        (format
-        nil "\"~A\" --eedisable --quiet"
+        nil "¥"‾A¥" --eedisable --quiet"
         (map-slash-to-backslash "C:/Program Files/Chez Scheme Version 7.4/bin/i3nt/petite.exe")))
- ; Gauche MinGW �Ō���
+ ; Gauche MinGW 版向け
  ;(setf *scheme-run-command*
  ;      (format
- ;       nil "\"~A\" -i"
+ ;       nil "¥"‾A¥" -i"
  ;       (map-slash-to-backslash "C:/Gauche/bin/gosh")))
- ; �C���f���g���^�u�ɂ������ꍇ
+ ; インデントをタブにしたい場合
  ;(add-hook
  ; '*scheme-mode-hook*
  ; #'(lambda ()
  ;     (ed::set-buffer-local 'indent-tabs-mode nil)))
- ; �]�����ʂ�ʑ��ɂ������ꍇ
+ ; 評価結果を別窓にしたい場合
  ;(setf *scheme-run-pop-to-args* '("*scheme run*" 40 t))
 
 
-**�g���� [#m9b0a772]
+**使い方 [#m9b0a772]
 
-- Scheme ���������t�@�C��(.scm)������Ȃ� xyzzy �ŊJ���� scheme-mode �ɂȂ��Ă܂�
-- M-x make-scheme-scratch ����� *Scheme scratch* �o�b�t�@���J���� *scratch* �݂����Ɏg���܂�
-- Scheme �̃\�[�X�R�[�h����͂���Ώ���ɐF���t������A����ɃC���f���g���Ă����Ǝv���܂�
-- C-RET �������ƁA���O�� S ������C���^�v���^�ɓ����ĕ]���������ʂ�Ԃ��܂�
-- C-c C-e �������ƁA�o�b�t�@�S�̂��C���^�v���^�ɓ����ĕ]���������ʂ�Ԃ��Ă���܂�
-- ���Ƃ͂悵�Ȃ� :-P
+- Scheme を書いたファイル(.scm)があるなら xyzzy で開けば scheme-mode になってます
+- M-x make-scheme-scratch すると *Scheme scratch* バッファが開いて *scratch* みたいに使えます
+- Scheme のソースコードを入力すれば勝手に色が付いたり、勝手にインデントしてくれると思われます
+- C-RET を押すと、直前の S 式を一つインタプリタに投げて評価した結果を返します
+- C-c C-e を押すと、バッファ全体をインタプリタに投げて評価した結果を返してくれます
+- あとはよしなに :-P
 
-**���g�I�Șb [#n25cc6c4]
+**中身的な話 [#n25cc6c4]
 
-export ���Ă���V���{���̈ꗗ�B
+export しているシンボルの一覧。
 
-:scheme-mode|scheme-mode �֐�
-:*scheme-mode-hook*|scheme-mode �̊J�n���ɌĂ΂��t�b�N
-:*scheme-keyword-file*|scheme-mode �̃L�[���[�h
-:*scheme-mode-map*|scheme-mode �̃L�[�}�b�v
-:*scheme-indent-map*|�����C���f���g����ۂɎg�����`�̃��X�g(�܂��A���t�@��)
-:make-scheme-scratch|*Scheme scratch* �o�b�t�@���쐬����֐�
-:*scheme-mode-scratch-buffer*|*Scheme scratch* �o�b�t�@�̖��O�������Ă�
-:*scheme-process*|�g�p���Ă���C���^�v���^�̃T�u�v���Z�X
-:*scheme-process-open-hook*|�C���^�v���^�J�n���Ɏg�p�����t�b�N(�v���Z�X��Ԃ�����)
-:*scheme-process-close-hook*|�C���^�v���^�I�����Ɏg�p�����t�b�N
-:*scheme-process-send-filter*|�C���^�v���^�Ƀ\�[�X�𑗂�ۂɎg�p�����t�b�N
-:*scheme-process-read-filter*|�C���^�v���^����̏o�͂��󂯎��ۂɎg�p�����t�b�N
-:*scheme-mode-version*|�X�V�o�[�W����(���t)
-:*scheme-run-command*|�f�t�H���g�� *scheme-process-open-hook* �Ŏg����R�}���h�s
-:*scheme-run-pop-to-args*|pop-to-buffer �̈��������X�g�Őݒ肵�Ă����ƃf�t�H���g�� *scheme-process-read-filter* �ŕʉ�ʃ|�b�v�A�b�v���s��
+:scheme-mode|scheme-mode 関数
+:*scheme-mode-hook*|scheme-mode の開始時に呼ばれるフック
+:*scheme-keyword-file*|scheme-mode のキーワード
+:*scheme-mode-map*|scheme-mode のキーマップ
+:*scheme-indent-map*|自動インデントする際に使われる定義のリスト(まだアルファ版)
+:make-scheme-scratch|*Scheme scratch* バッファを作成する関数
+:*scheme-mode-scratch-buffer*|*Scheme scratch* バッファの名前が入ってる
+:*scheme-process*|使用しているインタプリタのサブプロセス
+:*scheme-process-open-hook*|インタプリタ開始時に使用されるフック(プロセスを返すこと)
+:*scheme-process-close-hook*|インタプリタ終了時に使用されるフック
+:*scheme-process-send-filter*|インタプリタにソースを送る際に使用されるフック
+:*scheme-process-read-filter*|インタプリタからの出力を受け取る際に使用されるフック
+:*scheme-mode-version*|更新バージョン(日付)
+:*scheme-run-command*|デフォルトの *scheme-process-open-hook* で使われるコマンド行
+:*scheme-run-pop-to-args*|pop-to-buffer の引数をリストで設定しておくとデフォルトの *scheme-process-read-filter* で別画面ポップアップを行う
 
-�t�b�N�ɂ���Ă��Ȃ蒆�g�������邱�Ƃ��ł��܂��B*scheme-process-close-hook* �� nil �ŉ�
-�B*scheme-process-open-hook* �� *scheme-process-send-filter*�A*scheme-process-read-filter* �ɂ� 
-export ���ĂȂ������֐������蓖�Ă��Ă܂��B���g�͂���Ȋ����B
+フックによってかなり中身をいじることができます。*scheme-process-close-hook* は nil で可
+。*scheme-process-open-hook* と *scheme-process-send-filter*、*scheme-process-read-filter* には 
+export してない内部関数が割り当てられてます。中身はこんな感じ。
 
  (defun scheme-default-send-filter (proc sexp)
-   (format nil "~A\r\n" sexp))
+   (format nil "‾A¥r¥n" sexp))
  
  (defun scheme-default-read-filter (proc text)
    (when *scheme-run-pop-to-args*
@@ -107,27 +107,27 @@ export ���ĂȂ������֐������蓖�Ă��Ă܂��B���g�͂���Ȋ����B
    (set-buffer buffer)
    (make-process *scheme-run-command*))
 
-**�t�b�N��������T���v�� [#q7479c53]
+**フックをいじるサンプル [#q7479c53]
 
-.xyzzy �ɏ����B
+.xyzzy に書く。
 
-*** �C���f���g���^�u����Ȃ��󔒂ɂ��Ă��� [#ecec9f82]
+*** インデントをタブじゃなく空白にしてくれ [#ecec9f82]
 
  (add-hook
   '*scheme-mode-hook*
    #'(lambda ()
       (ed::set-buffer-local 'indent-tabs-mode nil)))
 
-*** �]�����ʂ�ʑ��ŊJ���Ă��� [#h4c983af]
+*** 評価結果を別窓で開いてくれ [#h4c983af]
 
-�t�b�N��������Ȃ��Ă��A.xyzzy �� *scheme-run-popup-args* 
-��ݒ肷��΃f�t�H���g�ŏ���ɂ���Ă����悤�ɕύX(20090118��)�B
-���̒l�����̂܂� pop-to-buffer �Ɉ����n�����B
+フックをいじらなくても、.xyzzy で *scheme-run-popup-args* 
+を設定すればデフォルトで勝手にやってくれるように変更(20090118版)。
+この値がそのまま pop-to-buffer に引き渡される。
 
- ; �]�����ʂ̃o�b�t�@��("*scheme run*") 10�s(10) �c����(t)
+ ; 評価結果のバッファ名("*scheme run*") 10行(10) 縦分割(t)
  (setf *scheme-run-popup-args* '("*scheme run*" 10 t))
 
-%%�T���v���� [[Gauche]] ���N������ꍇ�B%% �ȉ��͌Â����B
+%%サンプルは [[Gauche]] を起動する場合。%% 以下は古い情報。
 
  ; Gauche - directly
  (setf *scheme-process-open-hook*
@@ -139,7 +139,7 @@ export ���ĂȂ������֐������蓖�Ă��Ă܂��B���g�͂���Ȋ����B
                  (with-output-to-temp-buffer ("*Scheme run*")))
                (make-process
                 (format
-                 nil "~A"
+                 nil "‾A"
                  (map-slash-to-backslash
                   (merge-pathnames "../Gauche/bin/gosh.exe -i" (si:system-root)))))))))
  (setf *scheme-process-read-filter*
@@ -152,57 +152,57 @@ export ���ĂȂ������֐������蓖�Ă��Ă܂��B���g�͂���Ȋ����B
  
 ** TODO [#kf1f8f30]
 
-- �o�b�t�@�łȂ��t�@�C���𒼐ڕ]�����Ă���鋌�o�[�W������ scheme-mode �𓝍�����
-- %%guttyon ���ɂ��ʉ�ʂɏo�͂���ύX����荞�ށB���̍ہA���o�[�W������ scheme-view-mode ���g��%%
+- バッファでなくファイルを直接評価してくれる旧バージョンの scheme-mode を統合する
+- %%guttyon 氏による別画面に出力する変更を取り込む。その際、旧バージョンの scheme-view-mode を使う%%
 -- see. http://d.hatena.ne.jp/guttyon/20050929 (thanks Mr.guttyon)
 
-** ���j�Ƃ��킲�� [#tda1396d]
+** 歴史とたわごと [#tda1396d]
 
-�o���Ă����ȁB
+覚えてる限りな。
 
-- 2004.10 ���Bscheme-mode ������Ă݂܂���(���o�[�W����)
-- 2004.10.10 TAB / Shift + TAB �ōs�S�̂��C���f���g����悤�ɂ���
-- 2004.01.24 M-TAB �� complition �� keyword file ���炷��悤�ɒǉ�
-- 2004.01.28 ���ʕ\���� scheme-view-mode �Ƃ������Ƃɂ���
--- C-c C-e �œ�̉�ʂ�n�������
--- C-c C-q �Ō��ʉ�ʂ�������
+- 2004.10 頃。scheme-mode を作ってみました(旧バージョン)
+- 2004.10.10 TAB / Shift + TAB で行全体がインデントするようにした
+- 2004.01.24 M-TAB で complition を keyword file からするように追加
+- 2004.01.28 結果表示を scheme-view-mode ということにする
+-- C-c C-e で二つの画面を渡り歩ける
+-- C-c C-q で結果画面を消せる
 
-�ȏ�A���o�[�W�����B����͕ҏW���Ă���o�b�t�@�łȂ��A�ҏW���̃t�@�C�����R�}���h���C������
-�C���^�v���^�ɂ����Ă��̌��ʂ�ʃo�b�t�@�Ɏ�荞�ރ^�C�v�B
-�������Amatsuoka ���ӂƁu*scatch* �o�b�t�@�݂����Ȃ̗~�����v�Ǝv�����̂Ŗ��c�ɉ󂳂�� :-P
-�����āA���o�[�W�����̃t�@�C���𕴎��B����A�e�؂ȕ��ɋ��o�[�W�����𒸂����̂������������ orz
+以上、旧バージョン。これは編集しているバッファでなく、編集中のファイルをコマンドラインから
+インタプリタにかけてその結果を別バッファに取り込むタイプ。
+しかし、matsuoka がふと「*scatch* バッファみたいなの欲しい」と思ったので無残に壊される :-P
+そして、旧バージョンのファイルを紛失。後日、親切な方に旧バージョンを頂いたのだがそれも紛失 orz
 
-- 2005.06.17 �e�X�g�� scheme-mode.l �𓮂��`�� 
--- lisp-interactive ���[�h�Ɠ��������Ō��ʂ��A���ė���
--- �]������L�[�o�C���h�͓��(�c��� scheme-mode.zip �Ɠ���)
---- C-RET(= LFD) �Œ��߂� S ����]��
---- C-c C-e �Ńo�b�t�@�S�̂�]��
---- %%C-x k ���t�b�N���ăT�u�v���Z�X�E���Ă����ǎ~�߂���%%
---- (exit) ��]�����邩 C-c C-k �Ńv���Z�X�E��������(����W���o�C���h)�ǂ���
--- �����������n
---- pscheme + repl.scm(�܂�������) through TCP/IP �͂܂��܂�����
---- pscheme �𒼐ڌĂԂƌ��ʂ��A���ė��Ȃ�(pscheme �� STDOUT �̈����̖��)
---- Petite Chez Scheme �� MzScheme? �͑S�R����(STDIN/OUT ��������̂͑��v)
+- 2005.06.17 テスト版 scheme-mode.l を動く形に 
+-- lisp-interactive モードと同じ感じで結果が帰って来る
+-- 評価するキーバインドは二つ(残りは scheme-mode.zip と同じ)
+--- C-RET(= LFD) で直近の S 式を評価
+--- C-c C-e でバッファ全体を評価
+--- %%C-x k をフックしてサブプロセス殺してたけど止めっぴ%%
+--- (exit) を評価するか C-c C-k でプロセス殺した方が(これ標準バインド)良いね
+-- 試した処理系
+--- pscheme + repl.scm(まだ未完成) through TCP/IP はまあまあ動く
+--- pscheme を直接呼ぶと結果が帰って来ない(pscheme の STDOUT の扱いの問題)
+--- Petite Chez Scheme と MzScheme? は全然動く(STDIN/OUT がいけるのは大丈夫)
 
-- 2007.04.19 calc-lisp-indent ���g�����I�[�g�C���f���g��ǉ��B����������
--- backward-up-list �ŊJ�����ʂ̍ŏ��̎��ʎq�����āA���ꂪ Scheme �ۂ���ΔC�ӂ̃C���f���g�ʂ��g��
--- ��������Ȃ���� calc-lisp-indent ���g���ƌ����AS ���̉�͂��Ȃ����K���Ȏ����Ȃ񂾂��ǂ�
--- Scheme �Ǝ��̃V���{���ɂ��Ă� *scheme-indent-map* �Ƃ����n�b�V���Ɏ��ʎq�ƃC���f���g�ʓ���Ă�
--- �������A�܂� define �����ǉ����ĂȂ��̂ŁA���ɕK�v�Ȃ̂���ΐ��������Ă��ꂢ
--- ���̓C���f���g�ʂ���Ȃ��֐��������Ă��炻��ɏ�����������悤�ɂ��悤���Ƃ��v���Ă�
--- �܂��A�Ƃɂ��������_����Ȃ����܂������Ȃ̂ŁA�������炸
--- README �t�@�C����������BWiki �ɏグ���悤 Wiki ���@�ŏ����Ă܂�(�蔲��)
+- 2007.04.19 calc-lisp-indent を使ったオートインデントを追加。すごいα版
+-- backward-up-list で開き括弧の最初の識別子を見て、それが Scheme ぽければ任意のインデント量を使う
+-- そうじゃなければ calc-lisp-indent を使うと言う、S 式の解析しない超適当な実装なんだけどね
+-- Scheme 独自のシンボルについては *scheme-indent-map* というハッシュに識別子とインデント量入れてる
+-- しかも、まだ define しか追加してないので、他に必要なのあれば随時教えてくれい
+-- 実はインデント量じゃなく関数が入ってたらそれに書き直させるようにしようかとも思ってる
+-- まあ、とにかく今時点じゃないよりまし実装なので、あしからず
+-- README ファイルを作った。Wiki に上げれるよう Wiki 文法で書いてます(手抜き)
 
 - 2007.05.10
--- ��R������̎w�E�ŃC���f���g�v�Z�~�X���Ă��̂��C��
--- *scheme-indent-map* ���n�b�V�����烊�X�g�ɕύX(�ꊇ�w�肵�₷���̂�)
--- *scheme-mode-version* �ɏC�����t�����Ă����Ƃɂ���
+-- 上山完さんの指摘でインデント計算ミスしてたのを修正
+-- *scheme-indent-map* をハッシュからリストに変更(一括指定しやすいので)
+-- *scheme-mode-version* に修正日付を入れてくことにした
 
 - 2009.01.18
--- M ����(���O�o���Ă������̂������?)����������[��([[antares:matsuoka�Ƀ��b�Z�[�W]])
--- �v���Z�X���I������Ƒ����ĕ]���ł��Ȃ��Ƃ������e�ł������A���ɂ��߂�Ȃ���
--- �����̃y�[�W�ɃT���v���Ƃ��ď����Ă����ݒ肪���������Ƃ��������̘b
--- (if (buffer-process) (buffer-process) ... �Ńv���Z�X�̋N�����P�`���Ă�
--- ������C�����ĂƂ����̂��A���Ȃ̂ƁA���R�������莩�̂��C�}�C�`�Ȃ̂�
--- �f�t�H���g�̐ݒ�𐮔����āA.xyzzy �ɂ������Ə����΂����悤�ɕύX
--- ���܂ł��낢��ݒ肵�Ă���l�����ɐݒ�ς��Ȃ��Ă������͂�
+-- M さん(名前出してもいいのかしらん?)から特命メール([[antares:matsuokaにメッセージ]])
+-- プロセスが終了すると続けて評価できないという内容でしたが、非常にごめんなさい
+-- ここのページにサンプルとして書いていた設定が悪かったというだけの話
+-- (if (buffer-process) (buffer-process) ... でプロセスの起動をケチってた
+-- それを修正してというのもアレなのと、自由すぎる作り自体もイマイチなので
+-- デフォルトの設定を整備して、.xyzzy にちょろっと書けばいいように変更
+-- 今までいろいろ設定している人も特に設定変えなくても動くはず
