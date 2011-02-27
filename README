@@ -1,0 +1,208 @@
+project page: http://fun.sci.fukuoka-u.ac.jp/wiki/index.php?xyzzy
+
+*scheme-mode by [[matsuoka]] [#b46ffbbf]
+
+scheme-mode for xyzzy は Scheme を書くためのメジャーモード。
+できることは次のとおり。
+
++ 書いたソースコードにそれなりに色が付く(xyzzy の syntax ファイルで)
++ 書いたソースコードの色が付くやつは全部打たなくても補完できる(少ないが)
++ 書いたソースコードがそれなりに自動インデントされる(まだ実装したばっかだが)
++ 書いたソースコードを自分の使っているインタプリタに実行させる(うまく行けば)
++ 上の機能を使って xyzzy の *scratch* バッファの Scheme 版みたいなのが作れる
+
+次のような人向け?
+
+- Windows で Scheme 勉強したいんだけどコマンドラインはちょっと…
+- xyzzy で Scheme 動かして計算させてみよう!(←わしだ)
+- xyzzy で動かすと重い処理を外の Scheme に投げよう(←わしだ)
+
+つまり、自分のためのオレオレモード…の、はずだった!(PPG 風) のでした。
+
+**インストール [#s27c935e]
+
+- scheme-mode.zip を解凍して、site-lisp/scheme-mode.l と etc/Scheme を取り出す
+- site-lisp/scheme-mode.l を xyzzy の site-lisp の下に置く
+- etc/Scheme を xyzzy の etc の下に置く
+- scheme-mode.l をバイトコンパイルしておく
+-- M-x byte-compile-file するか、ファイラーで scheme-mode.l を選択して B(←大文字)を押す
+- .xyzzy に呼び出したいインタプリタ向けの設定を書く
+-- サンプルを書いておくのでいじってくれい
+--- 20090118 版で設定を簡素化したー
+--- デフォルトのフックを整備しただけなので昔書いてあった設定も有効
+
+ ;======================================================================
+ ; scheme-mode(20090118)
+ ;----------------------------------------------------------------------
+ (load-library "scheme-mode")
+ (push '("\\.scm$" . scheme-mode) *auto-mode-alist*)
+ ; インタプリタの起動コマンドを *scheme-run-command* に設定 
+ ; Chez Petite Scheme 向け
+ (setf *scheme-run-command*
+       (format
+        nil "\"~A\" --eedisable --quiet"
+        (map-slash-to-backslash "C:/Program Files/Chez Scheme Version 7.4/bin/i3nt/petite.exe")))
+ ; Gauche MinGW 版向け
+ ;(setf *scheme-run-command*
+ ;      (format
+ ;       nil "\"~A\" -i"
+ ;       (map-slash-to-backslash "C:/Gauche/bin/gosh")))
+ ; インデントをタブにしたい場合
+ ;(add-hook
+ ; '*scheme-mode-hook*
+ ; #'(lambda ()
+ ;     (ed::set-buffer-local 'indent-tabs-mode nil)))
+ ; 評価結果を別窓にしたい場合
+ ;(setf *scheme-run-pop-to-args* '("*scheme run*" 40 t))
+
+
+**使い方 [#m9b0a772]
+
+- Scheme を書いたファイル(.scm)があるなら xyzzy で開けば scheme-mode になってます
+- M-x make-scheme-scratch すると *Scheme scratch* バッファが開いて *scratch* みたいに使えます
+- Scheme のソースコードを入力すれば勝手に色が付いたり、勝手にインデントしてくれると思われます
+- C-RET を押すと、直前の S 式を一つインタプリタに投げて評価した結果を返します
+- C-c C-e を押すと、バッファ全体をインタプリタに投げて評価した結果を返してくれます
+- あとはよしなに :-P
+
+**中身的な話 [#n25cc6c4]
+
+export しているシンボルの一覧。
+
+:scheme-mode|scheme-mode 関数
+:*scheme-mode-hook*|scheme-mode の開始時に呼ばれるフック
+:*scheme-keyword-file*|scheme-mode のキーワード
+:*scheme-mode-map*|scheme-mode のキーマップ
+:*scheme-indent-map*|自動インデントする際に使われる定義のリスト(まだアルファ版)
+:make-scheme-scratch|*Scheme scratch* バッファを作成する関数
+:*scheme-mode-scratch-buffer*|*Scheme scratch* バッファの名前が入ってる
+:*scheme-process*|使用しているインタプリタのサブプロセス
+:*scheme-process-open-hook*|インタプリタ開始時に使用されるフック(プロセスを返すこと)
+:*scheme-process-close-hook*|インタプリタ終了時に使用されるフック
+:*scheme-process-send-filter*|インタプリタにソースを送る際に使用されるフック
+:*scheme-process-read-filter*|インタプリタからの出力を受け取る際に使用されるフック
+:*scheme-mode-version*|更新バージョン(日付)
+:*scheme-run-command*|デフォルトの *scheme-process-open-hook* で使われるコマンド行
+:*scheme-run-pop-to-args*|pop-to-buffer の引数をリストで設定しておくとデフォルトの *scheme-process-read-filter* で別画面ポップアップを行う
+
+フックによってかなり中身をいじることができます。*scheme-process-close-hook* は nil で可
+。*scheme-process-open-hook* と *scheme-process-send-filter*、*scheme-process-read-filter* には 
+export してない内部関数が割り当てられてます。中身はこんな感じ。
+
+ (defun scheme-default-send-filter (proc sexp)
+   (format nil "~A\r\n" sexp))
+ 
+ (defun scheme-default-read-filter (proc text)
+   (when *scheme-run-pop-to-args*
+     (unless (find-buffer (car *scheme-run-pop-to-args*))
+       (save-excursion
+         (switch-to-buffer (car *scheme-run-pop-to-args*))
+         (setup-temp-buffer (selected-buffer))))
+     (apply 'pop-to-buffer *scheme-run-pop-to-args*))
+   (insert text)
+   (set-window (get-buffer-window (process-buffer proc)))
+   (refresh-screen))
+ 
+ (defun scheme-default-open-hook (buffer)
+   (set-buffer buffer)
+   (make-process *scheme-run-command*))
+
+**フックをいじるサンプル [#q7479c53]
+
+.xyzzy に書く。
+
+*** インデントをタブじゃなく空白にしてくれ [#ecec9f82]
+
+ (add-hook
+  '*scheme-mode-hook*
+   #'(lambda ()
+      (ed::set-buffer-local 'indent-tabs-mode nil)))
+
+*** 評価結果を別窓で開いてくれ [#h4c983af]
+
+フックをいじらなくても、.xyzzy で *scheme-run-popup-args* 
+を設定すればデフォルトで勝手にやってくれるように変更(20090118版)。
+この値がそのまま pop-to-buffer に引き渡される。
+
+ ; 評価結果のバッファ名("*scheme run*") 10行(10) 縦分割(t)
+ (setf *scheme-run-popup-args* '("*scheme run*" 10 t))
+
+%%サンプルは [[Gauche]] を起動する場合。%% 以下は古い情報。
+
+ ; Gauche - directly
+ (setf *scheme-process-open-hook*
+       #'(lambda (buffer)
+           (if (buffer-process)
+               (buffer-process)
+             (progn
+               (save-window-excursion
+                 (with-output-to-temp-buffer ("*Scheme run*")))
+               (make-process
+                (format
+                 nil "~A"
+                 (map-slash-to-backslash
+                  (merge-pathnames "../Gauche/bin/gosh.exe -i" (si:system-root)))))))))
+ (setf *scheme-process-read-filter*
+       #'(lambda (proc text)
+           (pop-to-buffer "*Scheme run*" 10)
+           (goto-char (point-max))
+           (insert text)
+           (set-window (get-buffer-window (process-buffer proc)))
+           (refresh-screen)))
+ 
+** TODO [#kf1f8f30]
+
+- バッファでなくファイルを直接評価してくれる旧バージョンの scheme-mode を統合する
+- %%guttyon 氏による別画面に出力する変更を取り込む。その際、旧バージョンの scheme-view-mode を使う%%
+-- see. http://d.hatena.ne.jp/guttyon/20050929 (thanks Mr.guttyon)
+
+** 歴史とたわごと [#tda1396d]
+
+覚えてる限りな。
+
+- 2004.10 頃。scheme-mode を作ってみました(旧バージョン)
+- 2004.10.10 TAB / Shift + TAB で行全体がインデントするようにした
+- 2004.01.24 M-TAB で complition を keyword file からするように追加
+- 2004.01.28 結果表示を scheme-view-mode ということにする
+-- C-c C-e で二つの画面を渡り歩ける
+-- C-c C-q で結果画面を消せる
+
+以上、旧バージョン。これは編集しているバッファでなく、編集中のファイルをコマンドラインから
+インタプリタにかけてその結果を別バッファに取り込むタイプ。
+しかし、matsuoka がふと「*scatch* バッファみたいなの欲しい」と思ったので無残に壊される :-P
+そして、旧バージョンのファイルを紛失。後日、親切な方に旧バージョンを頂いたのだがそれも紛失 orz
+
+- 2005.06.17 テスト版 scheme-mode.l を動く形に 
+-- lisp-interactive モードと同じ感じで結果が帰って来る
+-- 評価するキーバインドは二つ(残りは scheme-mode.zip と同じ)
+--- C-RET(= LFD) で直近の S 式を評価
+--- C-c C-e でバッファ全体を評価
+--- %%C-x k をフックしてサブプロセス殺してたけど止めっぴ%%
+--- (exit) を評価するか C-c C-k でプロセス殺した方が(これ標準バインド)良いね
+-- 試した処理系
+--- pscheme + repl.scm(まだ未完成) through TCP/IP はまあまあ動く
+--- pscheme を直接呼ぶと結果が帰って来ない(pscheme の STDOUT の扱いの問題)
+--- Petite Chez Scheme と MzScheme? は全然動く(STDIN/OUT がいけるのは大丈夫)
+
+- 2007.04.19 calc-lisp-indent を使ったオートインデントを追加。すごいα版
+-- backward-up-list で開き括弧の最初の識別子を見て、それが Scheme ぽければ任意のインデント量を使う
+-- そうじゃなければ calc-lisp-indent を使うと言う、S 式の解析しない超適当な実装なんだけどね
+-- Scheme 独自のシンボルについては *scheme-indent-map* というハッシュに識別子とインデント量入れてる
+-- しかも、まだ define しか追加してないので、他に必要なのあれば随時教えてくれい
+-- 実はインデント量じゃなく関数が入ってたらそれに書き直させるようにしようかとも思ってる
+-- まあ、とにかく今時点じゃないよりまし実装なので、あしからず
+-- README ファイルを作った。Wiki に上げれるよう Wiki 文法で書いてます(手抜き)
+
+- 2007.05.10
+-- 上山完さんの指摘でインデント計算ミスしてたのを修正
+-- *scheme-indent-map* をハッシュからリストに変更(一括指定しやすいので)
+-- *scheme-mode-version* に修正日付を入れてくことにした
+
+- 2009.01.18
+-- M さん(名前出してもいいのかしらん?)から特命メール([[antares:matsuokaにメッセージ]])
+-- プロセスが終了すると続けて評価できないという内容でしたが、非常にごめんなさい
+-- ここのページにサンプルとして書いていた設定が悪かったというだけの話
+-- (if (buffer-process) (buffer-process) ... でプロセスの起動をケチってた
+-- それを修正してというのもアレなのと、自由すぎる作り自体もイマイチなので
+-- デフォルトの設定を整備して、.xyzzy にちょろっと書けばいいように変更
+-- 今までいろいろ設定している人も特に設定変えなくても動くはず
